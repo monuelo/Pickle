@@ -10,11 +10,18 @@ read -r -p "${1:-- You want to install gcc and make? [Yes/No]} " response
 echo
 
 echo "- Now, let's configure the execution file..."
+
 sleep 2
+
 make > /dev/null
+
 pwd=$(pwd)
 user=$(whoami)
+
 cp $pwd/pickle /home/$user/.local/bin > /dev/null
+export PATH=$PATH:/home/$user/.local/bin
+source /etc/environment
+
 echo
 echo "- Thank's for install Pickle, run 'pickle' on terminal to start"
 echo "

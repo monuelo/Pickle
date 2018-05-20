@@ -4,7 +4,7 @@ confirm() {
     case "$response" in
         [yY][eE][sS]|[yY])
             echo
-            read -r -p "${1:-- Really? o.O [Yes/Nooooooooooooo]} " response
+            read -r -p "${1:-- Really? o.O [Yes/Nooooo]} " response
             case "$response" in
                 [yY][eE][sS]|[yY])
                 pwd=$(pwd)

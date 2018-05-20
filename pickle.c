@@ -10,9 +10,18 @@
 
 //*** Defines ***/
 #define PICKLE_VERSION "0.0.1"
-#define ABUF_INIT {NULL, 0}
+
+#define CTRL_KEY(k) ((k) & 0x1f)
+
+enum keys {
+  ARROW_LEFT = 1000,
+  ARROW_RIGHT,
+  ARROW_UP,
+  ARROW_DOWN
+};
 
 struct pickleConfig {
+  int cx, cy;
   int screenrows;
   int screencols;
   struct termios orig_termios;
@@ -60,6 +69,8 @@ struct abuf{
   int len;
 };
 
+#define ABUF_INIT {NULL, 0}
+
 void abAppend(struct abuf *ab, const char *s, int len){
   char *new = realloc(ab -> b, ab -> len + len);
 
@@ -75,13 +86,18 @@ void abFree(struct abuf *ab){
 
 void welcomeScreenDraw(struct abuf *ab, char message[]) {
   char ch[80];
+
   int lenght = snprintf(ch, sizeof(ch), message, PICKLE_VERSION);
+  
   if (lenght > P.screencols) lenght = P.screencols;
+  
   int padding = (P.screencols - lenght) / 2;
+  
   if (padding) {
     abAppend(ab, "~", 1);
     padding--;
   }
+  
   while (padding--) abAppend(ab, " ", 1);
   abAppend(ab, ch, lenght);
 }
@@ -105,13 +121,31 @@ void editorDrawRows(struct abuf *ab) {
 }
 
 // Read Bytes
-char editorReadKey() {
+int editorReadKey() {
   int nread;
   char c;
   while ((nread = read(STDIN_FILENO, &c, 1)) != 1) {
     if (nread == -1 && errno != EAGAIN) die("read");
   }
-  return c;
+
+  if(c == '\x1b'){
+    char seq[3];
+
+    if (read(STDIN_FILENO, &seq[0], 1) != 1) return '\x1b';
+    if (read(STDIN_FILENO, &seq[1], 1) != 1) return '\x1b';   
+    
+    if(seq[0] == '['){
+      switch (seq[1]){
+        case 'A': return ARROW_UP;
+        case 'B': return ARROW_DOWN;
+        case 'C': return ARROW_RIGHT;
+        case 'D': return ARROW_LEFT;
+      }
+    }
+    return '\x1b';
+  } else {
+    return c;
+  }
 }
 
 // Get Cursor Position
@@ -154,13 +188,49 @@ int getWindowSize(int *rows, int *cols){
 
 }
 
+void editorMoveCursor(int key){
+  switch (key){
+    case ARROW_LEFT:
+      if(P.cx != 0){
+        P.cx--;
+      }
+      break;
+
+    case ARROW_RIGHT:
+      if (P.cx != P.screencols - 1) {
+        P.cx++;
+      }
+      break;
+
+    case ARROW_UP:
+      if(P.cy != 0){
+        P.cy--;
+      }
+      break;
+
+    case ARROW_DOWN:
+      if (P.cy != P.screencols - 1) {
+        P.cy++;
+      }
+      break;
+  }
+
+}
 
 // Config Keypress
 void editorProcessKeypress() {
-  char c = editorReadKey();
+  int c = editorReadKey();
   switch (c) {
     case CTRL_KEY('q'):
+      write(STDOUT_FILENO, "\x1b[2J", 4);
+      write(STDOUT_FILENO, "\x1b[H", 3);
       exit(0);
+      break;
+    case ARROW_UP:
+    case ARROW_DOWN:
+    case ARROW_LEFT:
+    case ARROW_RIGHT:
+      editorMoveCursor(c);
       break;
   }
 }
@@ -174,7 +244,10 @@ void editorRefreshScreen() {
   
   editorDrawRows(&ab);
   
-  abAppend(&ab, "\x1b[H", 3);
+  char buf[32];
+  snprintf(buf, sizeof(buf), "\x1b[%d;%dH", P.cy + 1, P.cx + 1);
+  abAppend(&ab, buf, strlen(buf));
+
   abAppend(&ab, "\x1b[?25h", 6);
 
   write(STDOUT_FILENO, ab.b, ab.len);
@@ -184,6 +257,9 @@ void editorRefreshScreen() {
 
 // Init the Editor with previous configs
 void init(){
+    P.cx = 0;
+    P.cy = 0;
+
     if(getWindowSize(&P.screenrows, &P.screencols) == -1){
         die("getWindowSize");
     }
