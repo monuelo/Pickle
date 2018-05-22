@@ -91,7 +91,7 @@ void enableRawMode() {
   raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
   raw.c_cc[VMIN] = 0;
   raw.c_cc[VTIME] = 1;
-  
+
   if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) die("tcsetattr");
 }
 
@@ -115,20 +115,20 @@ void abFree(struct appendBuffer *ab){
   free(ab -> b);
 }
 
-void welcomeScreenDraw(struct appendBuffer *ab, char message[]) {
+void welcomeScreenDraw(struct appendBuffer *ab, const char message[]) {
   char ch[80];
 
   int lenght = snprintf(ch, sizeof(ch), message, PICKLE_VERSION);
-  
+
   if (lenght > P.screencols) lenght = P.screencols;
-  
+
   int padding = (P.screencols - lenght) / 2;
-  
+
   if (padding) {
     abAppend(ab, "~", 1);
     padding--;
   }
-  
+
   while (padding--) abAppend(ab, " ", 1);
   abAppend(ab, ch, lenght);
 }
@@ -231,11 +231,11 @@ void editorRefreshScreen() {
 
   abAppend(&ab, "\x1b[?25l", 6);
   abAppend(&ab, "\x1b[H", 3);
-  
+
   editorDrawRows(&ab);
   editorDrawStatusBar(&ab);
   editorDrawMessageBar(&ab);
-  
+
   char buf[32];
   snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (P.cy - P.rowoff) + 1, (P.rx - P.coloff) + 1);
   abAppend(&ab, buf, strlen(buf));
@@ -250,17 +250,17 @@ void editorRefreshScreen() {
 int editorReadKey() {
   int nread;
   char c;
-  
+
   while ((nread = read(STDIN_FILENO, &c, 1)) != 1) {
     if (nread == -1 && errno != EAGAIN) die("read");
   }
-  
+
   if (c == '\x1b') {
     char seq[3];
 
     if (read(STDIN_FILENO, &seq[0], 1) != 1) return '\x1b';
     if (read(STDIN_FILENO, &seq[1], 1) != 1) return '\x1b';
-  
+
     if (seq[0] == '[') {
       if (seq[1] >= '0' && seq[1] <= '9') {
         if (read(STDIN_FILENO, &seq[2], 1) != 1) return '\x1b';
@@ -301,22 +301,22 @@ int editorReadKey() {
 int getCursorPosition(int *rows, int *cols) {
   char buf[32];
   unsigned int i = 0;
- 
+
   if (write(STDOUT_FILENO, "\x1b[6n", 4) != 4) return -1;
- 
+
   while (i < sizeof(buf) - 1) {
     if (read(STDIN_FILENO, &buf[i], 1) != 1) break;
     if (buf[i] == 'R') break;
     i++;
   }
   buf[i] = '\0';
- 
+
   if (buf[0] != '\x1b' || buf[1] != '[') return -1;
   if (sscanf(&buf[2], "%d;%d", rows, cols) != 2) return -1;
-  
+
   printf("\r\n&buf[1]: '%s'\r\n", &buf[1]);
   editorReadKey();
- 
+
   return -1;
 }
 
@@ -328,7 +328,7 @@ int getWindowSize(int *rows, int *cols){
         if (write(STDOUT_FILENO, "\x1b[999C\x1b[999B", 12 != 12)){
           return -1;
         }
-        return getCursorPosition(rows, cols); 
+        return getCursorPosition(rows, cols);
     } else {
       *cols = ws.ws_col;
       *rows = ws.ws_row;
@@ -370,7 +370,7 @@ void editorMoveCursor(int key){
 
   row = (P.cy >= P.numrows) ? NULL : &P.row[P.cy];
   int rowlenght = row ? row -> size : 0;
-  
+
   if (P.cx > rowlenght) {
     P.cx = rowlenght;
   }
@@ -383,7 +383,7 @@ void editorUpdateRow(erow *row) {
   int tabs = 0;
   for (int i = 0; i < row -> size; i++)
     if (row -> chars[i] == '\t') tabs++;
-  
+
 
   free(row->render);
   row->render = (char*)malloc(row->size + tabs*(PICKLE_TAB_STOP - 1) + 1);
@@ -402,7 +402,7 @@ void editorUpdateRow(erow *row) {
   row -> rsize = index;
 }
 
-void editorAppendRow(char *s, size_t len){
+void editorAppendRow(const char *s, size_t len){
   P.row = (erow*)realloc(P.row, sizeof(erow) * (P.numrows + 1));
 
   int at = P.numrows;
@@ -410,7 +410,7 @@ void editorAppendRow(char *s, size_t len){
   P.row[at].chars = (char*)malloc(len + 1);
   memcpy(P.row[at].chars, s, len);
   P.row[at].chars[len] = '\0';
-  
+
   P.row[at].rsize = 0;
   P.row[at].render = NULL;
   editorUpdateRow(&P.row[at]);
@@ -456,7 +456,7 @@ void editorProcessKeypress() {
         P.cx = P.row[P.cy].size;
       }
       break;
-    
+
     case BACKSPACE:
     case CTRL_KEY('h'):
     case DEL_KEY:
@@ -476,18 +476,18 @@ void editorProcessKeypress() {
           editorMoveCursor(c == PAGE_UP ? ARROW_UP : ARROW_DOWN);
       }
         break;
-    
+
     case ARROW_UP:
     case ARROW_DOWN:
     case ARROW_LEFT:
     case ARROW_RIGHT:
       editorMoveCursor(c);
       break;
-    
+
     case CTRL_KEY('l'):
     case '\x1b':
       break;
-    
+
     default:
       editorInsertChar(c);
       break;

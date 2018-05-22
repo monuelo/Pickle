@@ -1,6 +1,6 @@
 #define _DEFAULT_SOURCE
 #define _BSD_SOURCE
-#define _GNU_SOURCE
+#define __USE_GNU
 
 /*** Includes ***/
 #include <sys/types.h>
@@ -14,6 +14,8 @@
 #include <time.h>
 #include <sys/ioctl.h>
 #include <stdarg.h>
+
+using namespace std;
 
 //*** Defines ***/
 #define PICKLE_VERSION "0.0.1"
@@ -93,27 +95,27 @@ void enableRawMode() {
   if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) die("tcsetattr");
 }
 
-struct abuf{
+struct appendBuffer{
   char *b;
   int len;
 };
 
-#define ABUF_INIT {NULL, 0}
+#define APPENDBUFFER_INIT {NULL, 0}
 
-void abAppend(struct abuf *ab, const char *s, int len){
-  char *new = realloc(ab -> b, ab -> len + len);
+void abAppend(struct appendBuffer *ab, const char *s, int len){
+  char *buff = (char*)realloc(ab -> b, ab -> len + len);
 
-  if (new == NULL) return;
-  memcpy(&new[ab -> len], s, len);
-  ab -> b = new;
+  if (buff == NULL) return;
+  memcpy(&buff[ab -> len], s, len);
+  ab -> b = buff;
   ab -> len += len;
 }
 
-void abFree(struct abuf *ab){
+void abFree(struct appendBuffer *ab){
   free(ab -> b);
 }
 
-void welcomeScreenDraw(struct abuf *ab, char message[]) {
+void welcomeScreenDraw(struct appendBuffer *ab, char message[]) {
   char ch[80];
 
   int lenght = snprintf(ch, sizeof(ch), message, PICKLE_VERSION);
@@ -161,7 +163,7 @@ void editorScroll() {
   }
 }
 
-void editorDrawRows(struct abuf *ab) {
+void editorDrawRows(struct appendBuffer *ab) {
   int y;
 
   for (y = 0; y < P.screenrows; y++) {
@@ -185,7 +187,7 @@ void editorDrawRows(struct abuf *ab) {
     }
 }
 
-void editorDrawStatusBar(struct abuf *ab){
+void editorDrawStatusBar(struct appendBuffer *ab){
   abAppend(ab, "\x1b[7m", 4);
 
   char status[80], rstatus[80];
@@ -206,7 +208,7 @@ void editorDrawStatusBar(struct abuf *ab){
   abAppend(ab, "\r\n", 2);
 }
 
-void editorDrawMessageBar(struct abuf *ab) {
+void editorDrawMessageBar(struct appendBuffer *ab) {
   abAppend(ab, "\x1b[K", 3);
   int msglen = strlen(P.statusmsg);
   if (msglen > P.screencols) msglen = P.screencols;
@@ -225,7 +227,7 @@ void editorSetStatusMessage(const char *fmt, ...){
 // Clear Screen
 void editorRefreshScreen() {
   editorScroll();
-  struct abuf ab = ABUF_INIT;
+  struct appendBuffer ab = APPENDBUFFER_INIT;
 
   abAppend(&ab, "\x1b[?25l", 6);
   abAppend(&ab, "\x1b[H", 3);
@@ -384,7 +386,7 @@ void editorUpdateRow(erow *row) {
   
 
   free(row->render);
-  row->render = malloc(row->size + tabs*(PICKLE_TAB_STOP - 1) + 1);
+  row->render = (char*)malloc(row->size + tabs*(PICKLE_TAB_STOP - 1) + 1);
 
   int index = 0;
   int j;
@@ -401,11 +403,11 @@ void editorUpdateRow(erow *row) {
 }
 
 void editorAppendRow(char *s, size_t len){
-  P.row = realloc(P.row, sizeof(erow) * (P.numrows + 1));
+  P.row = (erow*)realloc(P.row, sizeof(erow) * (P.numrows + 1));
 
   int at = P.numrows;
   P.row[at].size = len;
-  P.row[at].chars = malloc(len + 1);
+  P.row[at].chars = (char*)malloc(len + 1);
   memcpy(P.row[at].chars, s, len);
   P.row[at].chars[len] = '\0';
   
@@ -418,7 +420,7 @@ void editorAppendRow(char *s, size_t len){
 
 void editorRowInsertChar(erow *row, int at, int c) {
   if (at < 0 || at > row -> size) at = row -> size;
-  row -> chars = realloc(row -> chars, row -> size + 2);
+  row -> chars = (char*)realloc(row -> chars, row -> size + 2);
   memmove(&row -> chars[at + 1], &row -> chars[at], row -> size - at + 1);
   row -> size++;
   row -> chars[at] = c;

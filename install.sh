@@ -1,10 +1,10 @@
 #!/bin/bash
 echo '- Welcome to the Pickle installation wizard'
 echo
-read -r -p "${1:-- You want to install gcc and make? [Yes/No]} " response
+read -r -p "${1:-- You want to install g++ and make? [Yes/No]} " response
     case "$response" in
         [yY][eE][sS]|[yY])
-        sudo apt-get install gcc make
+        sudo apt-get install g++ make
     ;;
     esac
 echo

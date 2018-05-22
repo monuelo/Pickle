@@ -1,2 +1,2 @@
-pickle: pickle.c
-	$(CC) pickle.c -o pickle -Wall -Wextra -pedantic -std=c99
+pickle: pickle.cpp
+	$(CXX) pickle.cpp -o pickle -Wall -Wextra -pedantic  -std=c++0x
