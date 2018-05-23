@@ -138,7 +138,7 @@ void welcomeScreenDraw(struct appendBuffer *ab, const char message[]) {
   abAppend(ab, ch, lenght);
 }
 
-int convertToRender(erow *row, int cx) {
+int editorRowCxToRx(erow *row, int cx) {
   int rx = 0;
   int j;
   for (j = 0; j < cx; j++) {
@@ -149,10 +149,23 @@ int convertToRender(erow *row, int cx) {
   return rx;
 }
 
+int editorRowRxToCx(erow *row, int rx) {
+  int cur_rx = 0;
+  int cx;
+  for (cx = 0; cx < row -> size; cx++){
+    if (row - > chars[cx] == '\t'){
+      cur_rx += (PICKLE_TAB_STOP - 1) - (cur_rx % PICKLE_TAB_STOP);
+    }
+    cur_rx++;
+    if (cur_rx > rx) return cx;
+  }
+  return cx;
+}
+
 void editorScroll() {
   P.rx = 0;
   if (P.cy < P.numrows) {
-    P.rx = convertToRender(&P.row[P.cy], P.cx);
+    P.rx = editorRowCxToRx(&P.row[P.cy], P.cx);
   }
   if (P.cy < P.rowoff) {
     P.rowoff = P.cy;
@@ -616,6 +629,27 @@ void saveFile() {
   }
   free(buff);
   editorSetStatusMessage("Can't save file. Error: %s", strerror(errno));
+}
+
+void editorFind() {
+  char *query = editorPrompt("Search: %s (ESC to cancel)");
+  if (query == NULL){
+    return;
+  }
+
+  int i;
+  for (i = 0; i < P.numrows; i++){
+    erow *row = &P.row[i];
+    char *match = strstr(row -> render, query);
+  }
+  if (match) {
+    P.cy = i;
+    P.cx = editorRowRxToCx(match - row -> render);
+    P.rowoff = P.numrows;
+    break;
+  }
+
+  free(query);
 }
 
 
