@@ -13,15 +13,23 @@ echo "- Now, let's configure the execution file..."
 
 sleep 2
 
-make > /dev/null
-
 pwd=$(pwd)
 user=$(whoami)
 
-cp $pwd/pickle /home/$user/.local/bin > /dev/null
-export PATH=$PATH:/home/$user/.local/bin
-source /etc/environment
+cd $pwd/usr/dev/
+make -s > /dev/null
 
+mv $pwd/usr/dev/pickle /$pwd/usr/bin
+
+origin=$(pwd)
+cd /../usr/bin/
+target=$(pwd)
+# sudo mv $origin/pickle $target
+
+cp $target/pickle /home/$user/.local/bin > /dev/null
+
+export PATH=$PATH:/home/$user/.local/bin    
+source /etc/environment
 echo
 echo "- Thank's for install Pickle, run 'pickle' on terminal to start"
 echo "
