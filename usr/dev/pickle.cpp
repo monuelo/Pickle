@@ -15,11 +15,11 @@
 #include <sys/ioctl.h>
 #include <stdarg.h>
 #include <fcntl.h>
+#include "syntax.cpp"
 
 using namespace std;
 
 /*** prototypes ***/
-
 void editorSetStatusMessage(const char *fmt, ...);
 void editorRefreshScreen();
 char *editorPrompt(const char *prompt, void (*callback)(const char *, int));
@@ -29,9 +29,6 @@ char *editorPrompt(const char *prompt, void (*callback)(const char *, int));
 #define PICKLE_TAB_STOP 4
 #define CTRL_KEY(k) ((k) & 0x1f)
 #define PICKLE_QUIT_TIMES 2
-
-#define HL_HIGHLIGHT_NUMBERS (1<<0)
-#define HL_HIGHLIGHT_STRINGS (1<<1)
 
 typedef struct erow {
   int idx;
@@ -121,37 +118,6 @@ void enableRawMode() {
 struct appendBuffer{
   char *b;
   int len;
-};
-
-struct editorSyntax {
-  char *filetype;
-  char **filematch;
-  char **keywords;
-  char *singleline_comment_start;
-  char *multiline_comment_start;
-  char *multiline_comment_end;
-  int flags;
-};
-
-
-/*** filetypes ***/
-
-char *C_HL_extensions[] = { ".c", ".h", ".cpp", NULL };
-char *C_HL_keywords[] = {
-  "switch", "if", "while", "for", "break", "continue", "return", "else",
-  "struct", "union", "typedef", "static", "enum", "class", "case",
-  "int|", "long|", "double|", "float|", "char|", "unsigned|", "signed|",
-  "void|", NULL
-};
-
-struct editorSyntax HLDB[] = {
-  {
-    "C/C++",
-    C_HL_extensions,
-    C_HL_keywords,
-    "//", "/*", "*/",
-    HL_HIGHLIGHT_NUMBERS | HL_HIGHLIGHT_STRINGS
-  },
 };
 
 #define HLDB_ENTRIES (sizeof(HLDB) / sizeof(HLDB[0]))
