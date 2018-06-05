@@ -3,19 +3,15 @@ confirm() {
     read -r -p "${1:--Are you sure you want to uninstall Pickle? [Yes/No]} " response
     case "$response" in
         [yY][eE][sS]|[yY])
-            echo
-            read -r -p "${1:-- Really? o.O [Yes/Nooooo]} " response
-            case "$response" in
-                [yY][eE][sS]|[yY])
-                pwd=$(pwd)
-                user=$(whoami)
-                rm /home/$user/.local/bin/pickle
-            ;;
-        *)      
-                show
-            ;;
-            esac
-            ;;
+        {
+            pwd=$(pwd)
+            user=$(whoami)
+            rm /home/$user/.local/bin/pickle > /dev/null
+        } || {
+            echo '\n\033[0;31m(FAIL)\033[0m Uninstall failed'
+        }
+        show
+                ;;
         *)
             show
             ;;
@@ -23,9 +19,7 @@ confirm() {
 }
 
 show() {
-    echo
-    echo "- Thank you for choosing us, we will not disappoint you."
-                
+            echo
             echo "
             ██████╗ ██╗ ██████╗██╗  ██╗██╗     ███████╗
             ██╔══██╗██║██╔════╝██║ ██╔╝██║     ██╔════╝
@@ -38,4 +32,5 @@ show() {
             echo
             echo
 }
+
 confirm
