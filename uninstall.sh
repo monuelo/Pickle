@@ -1,6 +1,6 @@
 confirm() {
     
-    read -r -p "${1:--Are you sure you want to uninstall Pickle? [Yes/No]} " response
+    read -r -p "${1:--Are you sure that you want to uninstall Pickle? [Yes/No]} " response
     case "$response" in
         [yY][eE][sS]|[yY])
         {
