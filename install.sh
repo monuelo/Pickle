@@ -2,7 +2,7 @@
 
 echo '- Welcome to the Pickle installation wizard'
 echo
-read -r -p "${1:-- You want to install g++ and make? [Yes/No]} " response
+read -r -p "${1:-- Do you want to install g++ and make? [Yes/No]} " response
     case "$response" in
         [yY][eE][sS]|[yY])
         sudo apt-get install g++ make
@@ -36,7 +36,7 @@ export PATH=$PATH:/home/$user/.local/bin
 source /etc/environment
 echo
 if $installed ; then
-    echo "- Thank's for install Pickle, run 'pickle' on terminal to start"
+    echo "- Thanks for installing Pickle, run 'pickle' on terminal to start"
 echo "
             ██████╗ ██╗ ██████╗██╗  ██╗██╗     ███████╗
             ██╔══██╗██║██╔════╝██║ ██╔╝██║     ██╔════╝
