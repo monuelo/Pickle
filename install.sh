@@ -17,11 +17,15 @@ echo "- Now, let's configure the execution file..."
     pwd=$(pwd)
     user=$(whoami)
     
-    cd $pwd/usr/dev/
-    
+    cd $pwd/src/
     make -s > /dev/null
-    mv $pwd/usr/dev/pickle /$pwd/usr/bin
-    cp $pwd/usr/bin/pickle /home/$user/.local/bin > /dev/null
+    cd ..
+
+    echo $pwd
+
+    mkdir bin
+    mv $pwd/src/pickle /$pwd/bin
+    cp $pwd/bin/pickle /home/$user/.local/bin > /dev/null
 } || {
     echo
     echo "INSTALLATION FAILED: Something wrong has occurred!"
