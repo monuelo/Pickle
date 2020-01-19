@@ -3,6 +3,7 @@
 
 ### Commands
 
-##### :door: Quit - `Ctrl+Q`
-##### :floppy_disk: Save - `Ctrl+S`
-##### :mag_right: Find - `Ctrl+F`
+ - :door: Quit - `Ctrl+Q`
+ - :floppy_disk: Save - `Ctrl+S`
+ - :mag_right: Find - `Ctrl+F`
+
